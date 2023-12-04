@@ -1,13 +1,9 @@
 import pandas as pd
-import numpy as np
-import os
 import re
-import nltk
 from nltk.stem import WordNetLemmatizer
-
-# from nltk.corpus import stopwords as nltk_stopwords
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import pairwise_distances
+
 
 # исходим из того,что таблицы для работы к этому этапу имеются целиком
 TOP_K = 5
@@ -45,7 +41,7 @@ def lemmatize_text(text):
 # векторизация названий
 def vectoriz(marketing_dealerprice, marketing_product):
     df_1 = marketing_dealerprice[["product_name_lem"]]
-    df_1 = df_1.rename(columns={"product_name": "name"})
+    df_1 = df_1.rename(columns={"product_name_lem": "name"})
     df_2 = marketing_product[["name_lem"]]
     df_2 = df_2.rename(columns={"name_lem": "name"})
     df = pd.concat([df_1, df_2])
@@ -78,7 +74,7 @@ def top_k_names(df, name, top_k):
     ]
     product_key = product_key.to_list()[0] + "_" + str(product_key.index[0])
     # получаем id и расстояния
-    z = df[product_key].sort_values()[:top_k]
+    z = df[product_key].sort_values()[:20]
     # формиркем список списков на выход
     z = pd.DataFrame(z)
     z["id"] = z.index.values
@@ -87,8 +83,6 @@ def top_k_names(df, name, top_k):
 
 
 def main(dealer_key_name):
-    # name = input()
-
     marketing_dealerprice, marketing_product = preprocessing_data(
         DEALER_PRICE, PRODUCT
     )
@@ -100,7 +94,7 @@ def main(dealer_key_name):
     )
     df_1, df_2 = vectoriz(marketing_dealerprice, marketing_product)
     df = matching_names(marketing_product, marketing_dealerprice, df_1, df_2)
-    final_names = top_k_names(df, dealer_key_name, TOP_K, DEALER_PRICE)
+    final_names = top_k_names(df, dealer_key_name, TOP_K)
     print(final_names)
 
 
