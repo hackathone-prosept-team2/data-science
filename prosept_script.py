@@ -1,8 +1,11 @@
 import pandas as pd
 import re
-from nltk.stem import WordNetLemmatizer
+import nltk
+import spacy
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import pairwise_distances
+
+nlp = spacy.load("ru_core_news_sm")
 
 
 # исходим из того,что таблицы для работы к этому этапу имеются целиком
@@ -17,12 +20,12 @@ def preprocessing_data(marketing_dealerprice, marketing_product):
     )
     marketing_dealerprice.reset_index(drop=True, inplace=True)
     marketing_product = marketing_product.dropna(subset="name")
+    marketing_product.reset_index(drop=True, inplace=True)
     return marketing_dealerprice, marketing_product
 
 
 # обработка текста
 def lemmatize_text(text):
-    lemmatizer = WordNetLemmatizer()
     # отделение английских слов
     pattern = re.compile(r"(?<=[а-яА-Я])(?=[A-Z])|(?<=[a-zA-Z])(?=[а-яА-Я])")
     text = re.sub(pattern, " ", text)
@@ -35,7 +38,10 @@ def lemmatize_text(text):
     # соотношения объемов
     pattern2 = re.compile(r"\b\d+:\d+\s*-\s*\d+:\d+\b|\s*\d+:\d+\s*")
     text = re.sub(pattern2, " ", text)
-    return "".join(lemmatizer.lemmatize(text))
+    # лемматизация
+    spacy_results = nlp(text)
+    text = " ".join([token.lemma_ for token in spacy_results])
+    return text
 
 
 # векторизация названий
