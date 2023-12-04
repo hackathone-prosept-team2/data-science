@@ -15,7 +15,8 @@ class RecommendationService:
         self.products = self._prepare_products(products_file)
         self.dataframe = self._make_dataframe()
 
-    def _prepare_products(self, products_file):
+    def _prepare_products(self, products_file: str) -> pd:
+        """Подготовка таблицы с Продуктами."""
         products = self._read_file(products_file)
         products = products.dropna(subset="name")
         products["name_lem"] = products["name"].apply(self._lemmatize_text)
