@@ -15,14 +15,15 @@ class RecommendationService:
         self.products = self._prepare_products(products_file)
         self.dataframe = self._make_dataframe()
 
-    def _prepare_products(self, products_file: str) -> pd:
+    def _prepare_products(self, products_file: str) -> pd.DataFrame:
         """Подготовка таблицы с Продуктами."""
         products = self._read_file(products_file)
         products = products.dropna(subset="name")
         products["name_lem"] = products["name"].apply(self._lemmatize_text)
         return products
 
-    def _prepare_prices(self, prices_file):
+    def _prepare_prices(self, prices_file: str) -> pd.DataFrame:
+        """Подготовка таблицы с ценами дилеров."""
         prices = self._read_file(prices_file)
         prices.drop_duplicates(
             subset=["product_key", "product_url", "product_name"], inplace=True
@@ -33,25 +34,20 @@ class RecommendationService:
         )
         return prices
 
-    def _make_dataframe(self):
+    def _make_dataframe(self) -> pd.DataFrame:
+        """Подготовка матрицы с сопоставлением наименований."""
         df_1, df_2 = self._vectoriz()
         dataframe = self._matching_names(df_1, df_2)
         return dataframe
 
     @staticmethod
-    def _read_file(path):
+    def _read_file(path: str) -> pd.DataFrame:
+        """Чтение csv-файла."""
         return pd.read_csv(path, sep=";")
 
-    def _preprocessing_data(self, prices, products):
-        prices.drop_duplicates(
-            subset=["product_key", "product_url", "product_name"], inplace=True
-        )
-        prices.reset_index(drop=True, inplace=True)
-        products = products.dropna(subset="name")
-        return prices, products
-
     @staticmethod
-    def _lemmatize_text(text):
+    def _lemmatize_text(text: str) -> str:
+        """Обработка текстовых данных."""
         lemmatizer = WordNetLemmatizer()
         # отделение английских слов
         pattern = re.compile(
@@ -69,7 +65,8 @@ class RecommendationService:
         text = re.sub(pattern2, " ", text)
         return "".join(lemmatizer.lemmatize(text))
 
-    def _vectoriz(self):
+    def _vectoriz(self) -> tuple[pd.DataFrame]:
+        """Векторизация наименования для дальнейшего сопоставления."""
         df_1 = self.prices[["product_name_lem"]]
         df_1 = df_1.rename(columns={"product_name_lem": "name"})
         df_2 = self.products[["name_lem"]]
@@ -83,7 +80,10 @@ class RecommendationService:
         df_2 = df_2.toarray()
         return df_1, df_2
 
-    def _matching_names(self, df_1, df_2):
+    def _matching_names(
+        self, df_1: pd.DataFrame, df_2: pd.DataFrame
+    ) -> pd.DataFrame:
+        """Сопоставление нвазаний дилера и подходящих продуктов."""
         df = pd.DataFrame(
             index=self.products["id"],
             columns=self.prices["product_key"]
@@ -95,7 +95,8 @@ class RecommendationService:
 
     def get_recommendations(
         self, dealer_name: str, recommendations_number: int = 10
-    ):
+    ) -> list[list[float, float]]:
+        """Получение рекомендаций."""
         # получаем ключи по названию
         product_key = self.prices.loc[
             self.prices["product_name"] == dealer_name, "product_key"
