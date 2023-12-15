@@ -118,6 +118,6 @@ class RecommendationService:
 
 
 service = RecommendationService()
-name = "Средство универсальное Prosept Universal Spray, 500мл"
+name = "Огнебиозащита для древесины Prosept ОГНЕБИО PROF II, 10 л, 064-10 И"
 result = service.get_recommendations(dealer_name=name)
 print(result)
